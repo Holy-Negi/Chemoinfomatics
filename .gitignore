@@ -1,0 +1,48 @@
+# ---------- Python ----------
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# 仮想環境 / uv
+.venv/
+.python-version
+
+# ---------- 環境変数・機密情報 ----------
+# DB 認証情報など（eln_db/.env）は絶対にコミットしない
+.env
+.env.*
+!.env.example
+
+# ---------- Node / フロントエンド (eln_frontend) ----------
+node_modules/
+eln_frontend/dist/
+eln_frontend/dist-ssr/
+*.local
+
+# ログ
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- IDE / エディタ ----------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.code-workspace
+
+# ---------- OS 生成ファイル ----------
+.DS_Store
+Thumbs.db
+
+# ---------- テスト・キャッシュ ----------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
