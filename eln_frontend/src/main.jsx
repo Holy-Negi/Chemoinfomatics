@@ -8,3 +8,17 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+/*
+全体の流れ
+index.html に <div id="root"></div>（空の入れ物）がある
+        │
+main.jsx が実行される
+        │
+① App.jsx から App コンポーネントを import
+② createRoot で id="root" の要素を描画先に設定
+③ .render(<App />) で App を root に描画
+        │
+        ▼
+ブラウザに化合物テーブルが表示される
+*/
