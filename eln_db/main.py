@@ -38,8 +38,12 @@ def create_compound(payload: CompoundCreate, db: Session = Depends(get_db)):
     return compound
 
 @app.get("/compounds", response_model=list[CompoundRead])
-def list_compound(db: Session = Depends(get_db)):
-    return db.scalars(select(Compound)).all()
+def list_compound(q: str | None = None, db: Session = Depends(get_db)):
+    stmt = select(Compound)
+    if q:
+        stmt = stmt.where(Compound.name.ilike(f"%{q}%"))
+        # ilikeはPostgreSQLの大文字小文字を無視する部分一致検索
+    return db.scalars(stmt).all()
 
 @app.get("/compounds/{compound_id}", response_model=CompoundRead)
 def get_compound(compound_id: int, db: Session = Depends(get_db)):
@@ -71,8 +75,11 @@ def create_reaction(payload: ReactionCreate, db: Session = Depends(get_db)):
     return reaction
 
 @app.get("/reactions", response_model=list[ReactionRead])
-def list_reaction(db: Session = Depends(get_db)):
-    return db.scalars(select(Reaction)).all()
+def list_reaction(q: str | None = None, db: Session = Depends(get_db)):
+    stmt = select(Reaction)
+    if q:
+        stmt = stmt.where(Reaction.exp_code.ilike(f"%{q}%"))
+    return db.scalars(stmt).all()
 
 @app.get("/reactions/{reaction_id}", response_model=ReactionRead)
 def get_reaction(reaction_id: int, db: Session = Depends(get_db)):

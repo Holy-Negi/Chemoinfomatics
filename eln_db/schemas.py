@@ -46,6 +46,7 @@ class ReactionCreate(BaseModel):
 class ReactionComponentRead(BaseModel):
     id: int
     compound_id: int
+    compound: CompoundRead
     role: Role
     equiv: float | None
     yield_percent: float | None
