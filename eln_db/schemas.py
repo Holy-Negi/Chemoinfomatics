@@ -13,9 +13,15 @@ class CompoundCreate(BaseModel):
     smiles: str
     density: float | None = None # =の右側はデフォルト値
 
+class CompoundUpdate(BaseModel):
+    name: str | None = None
+    smiles: str | None = None
+    density: float | None = None
+
 class CompoundRead(BaseModel):
     id: int
     name: str
+    smiles: str | None
     inchikey: str
     mw: float | None
     exact_mass: float | None
@@ -61,3 +67,19 @@ class ReactionRead(BaseModel):
     note: str | None
     components: list[ReactionComponentRead]
     model_config = {"from_attributes": True}
+
+class ReactionUpdate(BaseModel):
+    exp_code: str
+    date: datetime
+    scale: float
+    conc: float
+    note: str | None = None
+    components: list[ReactionComponentCreate]
+
+class EquivalentRow(BaseModel):
+    name: str
+    role: str
+    equiv: float | None
+    mmol: float | None
+    mass_g: float | None
+    volume_ml: float | None

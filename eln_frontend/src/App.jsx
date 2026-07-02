@@ -1,6 +1,6 @@
-import CompoundTable from "./CompoundTable.jsx"
-import ReactionTable from "./ReactionTable.jsx"
-// import BaseAccordion from "./Test.jsx"
+import CompoundTable from "./CompoundTable.jsx";
+import ReactionTable from "./ReactionTable.jsx";
+import EquivalentTable from "./EquivalentTable.jsx";
 
 function App() {
   return (
@@ -9,10 +9,8 @@ function App() {
       <CompoundTable />
       <h2>Reactions</h2>
       <ReactionTable />
-      <h2>Test</h2> 
-      {/* <BaseAccordion /> */}
+      <EquivalentTable />
     </div>
   );
 }
-
 export default App;

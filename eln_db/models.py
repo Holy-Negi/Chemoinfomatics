@@ -42,4 +42,7 @@ class Reaction(Base):
     conc: Mapped[float]
     note: Mapped[str | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    components: Mapped[list["ReactionComponent"]] = relationship(back_populates="reaction")
+    components: Mapped[list["ReactionComponent"]] = relationship(
+      back_populates="reaction",
+      cascade="all, delete-orphan",
+    )

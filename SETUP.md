@@ -90,18 +90,17 @@ uv sync
 ```
 
 `uv sync` は `pyproject.toml` / `uv.lock` に従って仮想環境を作り、パッケージを入れる。
-
-> **重要 — Alembic を追加する**
-> 現状 `pyproject.toml` の依存に **`alembic` が含まれていない**。
-> このままだと手順3-4のマイグレーションで `program not found` になるため、追加する:
-> ```powershell
-> uv add alembic
-> ```
-> `uv add` はインストールと同時に `pyproject.toml` へ記録するので、次回以降は `uv sync` だけで入る。
+`alembic` も依存に含まれているため、これだけで揃う（個別インストールは不要）。
 
 ### 3-2. 接続情報（`.env`）を作成
 
-`eln_db/.env` を新規作成し、手順②で決めたDBのユーザー名・パスワードを書く:
+`eln_db/` にはテンプレートの `.env.example` があるので、これをコピーして `.env` を作り、
+手順②で決めたDBのユーザー名・パスワードに書き換える:
+
+```powershell
+cd eln_db
+cp .env.example .env   # コピーしてから中身を編集
+```
 
 ```dotenv
 SQL_USERNAME = postgres
@@ -134,7 +133,7 @@ uv run alembic upgrade head
 
 これで `compounds` / `reactions` / `reaction_components` の3テーブルが `eln_db` に作成される。
 
-> - `uv run` を付けるのは、仮想環境内の `alembic` を使うため（付けないと `not recognized` になる）。
+> - `uv run` を付けるのは、仮想環境内の `alembic` を使うため（付けないと `not recognized` になる）。`alembic` は `uv sync` で導入済み。
 > - `upgrade head` = 最新のスキーマまで全マイグレーションを適用、の意味。
 > - 確認: `uv run alembic current` で現在のリビジョンが表示されればOK。
 
@@ -163,7 +162,7 @@ npm run dev      # 開発サーバを起動
 ```
 
 - 開発サーバは `http://localhost:5173` で起動する。
-- `src/App.jsx` がバックエンドの `/compounds` を `fetch` して化合物一覧を表示する。
+- `src/App.jsx` を起点に、化合物・反応の一覧表示や登録・編集・当量計算の画面を描画する（バックエンドの各APIを `fetch`）。
 - **バックエンド（手順③）が起動していないとデータを取得できない**ので、両方を同時に起動しておくこと。
 
 ### Viteのセットアップ
@@ -200,7 +199,7 @@ npm run dev
 
 | 症状                                                   | 原因と対処                                                                                            |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `alembic: not recognized` / `Failed to spawn: alembic` | `alembic` 未インストール。手順3-1の `uv add alembic` を実行。コマンドは `uv run alembic ...` の形で。 |
+| `alembic: not recognized` / `Failed to spawn: alembic` | 仮想環境の外で叩いている。`uv run alembic ...` の形で実行する（`uv sync` で導入済み）。 |
 | `alembic ...` が「設定ファイルが無い」と言う           | 実行場所が違う。`alembic.ini` のある `eln_db/` で実行する。                                           |
 | 起動時に `connection refused` / 認証エラー             | PostgreSQLが起動していない、または `.env` のユーザー名/パスワードが違う。手順②③を確認。               |
 | `database "eln_db" does not exist`                     | DB未作成。手順2-1の `CREATE DATABASE eln_db;` を実行。                                                |
@@ -219,9 +218,10 @@ Chemoinfomatics/
 │   ├── database.py      DB接続（.env を読む / import時に接続確認）
 │   ├── alembic/         マイグレーション履歴
 │   ├── alembic.ini      Alembic設定（このディレクトリで alembic を実行）
+│   ├── .env.example     .env のテンプレート（これをコピーして .env を作る）
 │   └── .env             ★要作成: DB認証情報（Git管理外）
-├── eln_frontend/    フロントエンド（React 19 + Vite）
+├── eln_frontend/    フロントエンド（React 19 + Vite + Material-UI）
 ├── PubChem/         PubChem API お試しスクリプト
-├── project/         設計資料（ER図）
-└── pyproject.toml   Python依存定義（★alembic を要追加）
+├── test/            RDKit お試しスクリプト・ER図（設計資料）
+└── pyproject.toml   Python依存定義（alembic 含む）
 ```
