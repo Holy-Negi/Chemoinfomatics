@@ -1,6 +1,6 @@
 import CompoundTable from "./CompoundTable.jsx";
 import ReactionTable from "./ReactionTable.jsx";
-import EquivalentTable from "./EquivalentTable.jsx";
+import StoichiometricTable from "./StoichiometricTable.jsx";
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
       <CompoundTable />
       <h2>Reactions</h2>
       <ReactionTable />
-      <EquivalentTable />
+      <StoichiometricTable />
     </div>
   );
 }

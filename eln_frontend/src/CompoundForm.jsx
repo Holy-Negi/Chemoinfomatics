@@ -32,11 +32,14 @@ function CompoundForm({ onCreated }) {
   };
 
   return (
-    <>
-      <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField label="SMILES" value={smiles} onChange={(e) => setSmiles(e.target.value)} />
-      <Button onClick={handleCreate}>Add</Button>
-    </>
+    <div style={{ border: "1px solid #ccc", padding: 12, marginBottom: 16 }}>
+      <h3 New compound></h3>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <TextField label="SMILES" value={smiles} onChange={(e) => setSmiles(e.target.value)} />
+      </div>
+      <Button variant="contained" onClick={handleCreate}>Register</Button>
+    </div>
   )
 }
 
