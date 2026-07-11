@@ -35,18 +35,21 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .idea/
 .code-workspace
+.claude/
 
 # ---------- OS 生成ファイル ----------
 .DS_Store
 Thumbs.db
 
-# ---------- テスト・キャッシュ ----------
+# ---------- キャッシュ ----------
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .coverage
 htmlcov/
+
+# --------- その他 ----------------
 PubChem/
 test/
-
+CLAUDE.md
 ER.dio

@@ -1,9 +1,4 @@
-# SETUP.md — 環境構築手順
-
-このプロジェクトを**まっさらな環境から動かす**ための手順書。
-データの流れ: **SMILES入力 → RDKitで物性計算 → PostgreSQL保存 → FastAPIで提供 → Reactで表示**
-
-構成は大きく3つ:
+# 環境構築手順
 
 | 部分           | 場所            | 技術                                    |
 | -------------- | --------------- | --------------------------------------- |
@@ -11,71 +6,60 @@
 | フロントエンド | `eln_frontend/` | Node.js (React 19 + Vite)               |
 | データベース   | （外部）        | PostgreSQL                              |
 
-セットアップは **「①前提ツール → ②DB準備 → ③バックエンド → ④フロントエンド」** の順で進める。
-特に **DBを先に用意してからでないとバックエンドが起動できない**点に注意（理由は手順③で後述）。
-
 ---
 
 ## ① 前提ソフトウェアのインストール
-
-以下を先にインストールしておく。括弧内は確認コマンド（PowerShell）。
 
 | ツール                | 用途                         | バージョン確認コマンド             |
 | --------------------- | ---------------------------- | ---------------------------------- |
 | **uv**                | Python本体とパッケージの管理 | `uv --version`                     |
 | **PostgreSQL**        | データベース本体             | `psql --version`                   |
 | **Node.js (npm同梱)** | フロントエンドのビルド・実行 | `node --version` / `npm --version` |
-| **Git**               | リポジトリの取得             | `git --version`                    |
 
-補足:
-- **Python は個別にインストール不要**。`.python-version` で `3.14` を指定しているので、`uv` が必要なバージョンを自動で用意する。
-- uv が未導入なら PowerShell で次を実行（公式インストーラ）:
+- **uv**
+
+  uvはpythonのパッケージマネージャーです。必要なライブラリを一括でインストールするのに使用します。
+インストールするにはターミナルで以下のコマンドを実行します。
+
   ```powershell
   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
-- PostgreSQL は公式インストーラ（EDB版など）でインストールする。インストール時に設定した**スーパーユーザー（既定 `postgres`）のパスワードを必ず控えておく**こと。手順②で使う。
+- **PostgreSQL**
+
+  [公式サイト](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)（EDB版など）からインストーラをダウンロードし、インストールします。パスワードを控えておいてください。
+
+- **Node.js**
+
+  [公式サイト](https://nodejs.org/ja/download)からインストーラをダウンロードし、インストールします。
 
 ---
 
 ## ② データベースの準備（PostgreSQL）
 
-このプロジェクトは **`eln_db` という名前のデータベース**に接続する設定が
-`eln_db/database.py` にハードコードされている:
-
-```python
-# database.py 13行目
-engine = create_engine(f"postgresql://{username}:{password}@localhost:5432/eln_db", echo=True)
-```
-
-つまり接続先は **`localhost:5432` の `eln_db`** で固定。これを先に作成する。
-
 ### 2-1. データベースを作成
 
-PowerShell で psql に接続（パスワードを聞かれたら手順①で控えたものを入力）:
+PowerShellでpsqlに接続します。インストール時に設定したパスワードを入力します。
 
 ```powershell
-psql -U postgres
+psql -U postgres -p
 ```
 
-接続できたら、psql の中で以下を実行してDBを作成し、抜ける:
+接続できたら、以下を実行してデータベースを作成します。
 
 ```sql
 CREATE DATABASE eln_db;
-\q
 ```
-
-> `\q` は psql を終了するコマンド。
 
 ### 2-2. （任意）専用ユーザーを作る場合
 
-`postgres`（管理者）をそのまま使ってもよいが、専用ユーザーを切るならpsql内で:
+専用ユーザーを作る場合は以下を実行します。
 
 ```sql
 CREATE USER eln_user WITH PASSWORD 'ここに任意のパスワード';
 GRANT ALL PRIVILEGES ON DATABASE eln_db TO eln_user;
 ```
 
-ここで決めた**ユーザー名とパスワードを手順③の `.env` に書く**。
+ここで決めた**ユーザー名とパスワードを手順③の `.env` に書きます**。
 
 ---
 
@@ -83,77 +67,56 @@ GRANT ALL PRIVILEGES ON DATABASE eln_db TO eln_user;
 
 ### 3-1. Python依存パッケージをインストール
 
-リポジトリのルートで:
+ルートディレクトリで以下を実行します
 
 ```powershell
 uv sync
 ```
 
-`uv sync` は `pyproject.toml` / `uv.lock` に従って仮想環境を作り、パッケージを入れる。
-`alembic` も依存に含まれているため、これだけで揃う（個別インストールは不要）。
+これにより、`pyproject.toml` / `uv.lock` に従ってpythonの仮想環境が作成され、必要なライブラリが一括で自動でインストールされます。
 
 ### 3-2. 接続情報（`.env`）を作成
 
-`eln_db/` にはテンプレートの `.env.example` があるので、これをコピーして `.env` を作り、
-手順②で決めたDBのユーザー名・パスワードに書き換える:
-
-```powershell
-cd eln_db
-cp .env.example .env   # コピーしてから中身を編集
-```
+`eln_db/.env.example`をもとに手順②で決めたユーザ名・パスワードを書き、ファイル名を`.env`に変換します。
 
 ```dotenv
-SQL_USERNAME = postgres
+SQL_USERNAME = ここにユーザ名
 SQL_PASSWORD = ここにパスワード
 ```
 
-> `.env` は認証情報を含むため、Gitにコミットしないこと（`.gitignore` で除外されているか確認）。
-> `database.py` が `python-dotenv` でこのファイルを読み込み、接続URLを組み立てる。
+### 3-4. テーブルを作成
 
-### 3-3. なぜDBを先に用意する必要があるか
-
-`database.py` は**読み込まれた瞬間にDBへ接続して動作確認をする**作りになっている:
-
-```python
-# database.py 19-20行目: import された時点で即実行される
-with engine.connect() as conn:
-    print(conn.execute(text("SELECT version()")).scalar())
-```
-
-そのため、**DB（手順②）と `.env`（手順3-2）が正しくないと、サーバ起動もマイグレーションも `import` の段階で失敗する**。順序を守ること。
-
-### 3-4. テーブルを作成（Alembicマイグレーション）
-
-`eln_db/` ディレクトリへ移動してから実行する（`alembic.ini` がそこにあるため）:
+`eln_db/` ディレクトリへ移動し、以下を実行するします。
 
 ```powershell
 cd eln_db
 uv run alembic upgrade head
 ```
 
-これで `compounds` / `reactions` / `reaction_components` の3テーブルが `eln_db` に作成される。
+これにより、 `compounds` / `reactions` / `reaction_components` の3テーブルが `eln_db` に作成されます。
 
-> - `uv run` を付けるのは、仮想環境内の `alembic` を使うため（付けないと `not recognized` になる）。`alembic` は `uv sync` で導入済み。
-> - `upgrade head` = 最新のスキーマまで全マイグレーションを適用、の意味。
-> - 確認: `uv run alembic current` で現在のリビジョンが表示されればOK。
+> 確認: `uv run alembic current` で現在のリビジョンが表示されればOK。
 
 ### 3-5. バックエンドAPIサーバを起動
 
-`eln_db/` ディレクトリで:
+`eln_db/` ディレクトリで以下を実行します。
 
 ```powershell
 uv run uvicorn main:app --reload
 ```
 
-- 既定で `http://127.0.0.1:8000` で起動する。
-- 動作確認: ブラウザで `http://127.0.0.1:8000/docs` を開くと、FastAPIの自動APIドキュメント（Swagger UI）が表示される。
-- `/health` エンドポイントで稼働確認もできる。
+> - 既定で `http://127.0.0.1:8000` で起動します。
+> - 動作確認: ブラウザで `http://127.0.0.1:8000/docs` を開くと、FastAPIの自動APIドキュメント（Swagger UI）が表示されます。
+> - ターミナルで以下を実行し、OKが返ってきたら動作はOKです。
+> ```powershell
+> curl http://127.0.0.1:8000/health
+> ```
 
 ---
 
 ## ④ フロントエンドのセットアップ（`eln_frontend/`）
 
-別のターミナルを開き、`eln_frontend/` ディレクトリで:
+別のターミナルを開き、`eln_frontend/` ディレクトリで以下を実行します。
 
 ```powershell
 cd eln_frontend
@@ -161,25 +124,14 @@ npm install      # package.json に従い依存をインストール
 npm run dev      # 開発サーバを起動
 ```
 
-- 開発サーバは `http://localhost:5173` で起動する。
-- `src/App.jsx` を起点に、化合物・反応の一覧表示や登録・編集・当量計算の画面を描画する（バックエンドの各APIを `fetch`）。
-- **バックエンド（手順③）が起動していないとデータを取得できない**ので、両方を同時に起動しておくこと。
-
-### Viteのセットアップ
-
-```bash
-# ルートディレクトリで実行
-npm create vite@latest project_name -- --template react
-cd project_name
-npm install # package.jsonに従ってライブラリをインストール
-npm run dev # サーバーの起動
-```
+- 開発サーバは `http://localhost:5173` で起動します。
+- **バックエンド（手順③）が起動していないとデータを取得できない**ので、両方を同時に起動しておくようにしてください。
 
 ---
 
 ## ⑤ 起動の全体像（2回目以降の日常起動）
 
-一度セットアップが済めば、日常的に動かすのは次の2つのターミナルだけ:
+一度セットアップが済めば、日常的に動かすのは次の2つのターミナルです。
 
 ```powershell
 # ターミナル1: バックエンド
@@ -191,7 +143,7 @@ cd eln_frontend
 npm run dev
 ```
 
-その上でブラウザで `http://localhost:5173` を開く。
+その上でブラウザで `http://localhost:5173` を開いてください。
 
 ---
 
@@ -207,21 +159,3 @@ npm run dev
 | フロントに化合物が表示されない                         | バックエンドが未起動、またはCORS。まず手順③のサーバが起動しているか確認。                             |
 
 ---
-
-## 各ディレクトリ早見表
-
-```
-Chemoinfomatics/
-├── eln_db/          バックエンド（FastAPI + PostgreSQL接続 + Alembic）
-│   ├── main.py          APIエンドポイント（/compounds, /reactions, /health）
-│   ├── models.py        テーブル定義（SQLAlchemy ORM）
-│   ├── database.py      DB接続（.env を読む / import時に接続確認）
-│   ├── alembic/         マイグレーション履歴
-│   ├── alembic.ini      Alembic設定（このディレクトリで alembic を実行）
-│   ├── .env.example     .env のテンプレート（これをコピーして .env を作る）
-│   └── .env             ★要作成: DB認証情報（Git管理外）
-├── eln_frontend/    フロントエンド（React 19 + Vite + Material-UI）
-├── PubChem/         PubChem API お試しスクリプト
-├── test/            RDKit お試しスクリプト・ER図（設計資料）
-└── pyproject.toml   Python依存定義（alembic 含む）
-```

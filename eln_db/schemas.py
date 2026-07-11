@@ -78,6 +78,7 @@ class ReactionUpdate(BaseModel):
 
 class EquivalentRow(BaseModel):
     name: str
+    mw: float | None
     role: str
     equiv: float | None
     mmol: float | None

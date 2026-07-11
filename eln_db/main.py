@@ -1,3 +1,18 @@
+# ===== API =====
+#   HTTPリクエスト（フロントエンド等からの要求）を受け取り、処理を実行して結果をJSONで返す
+#
+# エンドポイント一覧:
+#   /health                            動作確認
+#   /compounds        (GET/POST)       化合物の一覧取得・新規登録
+#   /compounds/{id}   (GET/PUT/DELETE) 化合物1件の取得・更新・削除
+#   /reactions        (GET/POST)       反応の一覧取得・新規登録
+#   /reactions/{id}   (GET/PUT/DELETE) 反応1件の取得・更新・削除
+#   /reactions/{id}/equivalents        当量計算
+#
+#   @app.get("/パス", response_model=返すデータの型)
+#   def 関数名(payload: 入力の型, db: Session = Depends(get_db)):
+#       ...
+#       return オブジェクト
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, func
@@ -9,31 +24,21 @@ from chemistry import compute_properties
 from crud import get_or_create_compound
 from stoichiometry import compute_equivalents
 
-# FastAPIインスタンスの生成
 app = FastAPI()
 
-# デコレータを用いて，関数health()はURL"/health"に対する操作であることをappに登録する
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 @app.post("/compounds", response_model=CompoundRead, status_code=201)
-# status_code=201
-#   作成完了のステータスコード
-# payload: CompoundCreate
-#   リクエストのjson型をCompoundCreate型に変換
-# db: Session = Depends(get_db)
-#   関数実行前にdbにget_db()の結果を代入する
 def create_compound(payload: CompoundCreate, db: Session = Depends(get_db)):
     compound, created = get_or_create_compound(db, payload.smiles, payload.name, payload.density)
-    # この時点で有効かつ既存でないSMILESの場合はSMILESからRDKitにより計算された各特性値がdbに追加される
-    # smilesの不正チェック（422不正入力）
+    # 不正なSMILESのチェック
     if compound is None:
         raise HTTPException(status_code=422, detail="invalid SMILES")
-    # inchikeyの重複チェック（409は競合）
+    # inchikeyの重複チェック
     if not created:
         raise HTTPException(status_code=409, detail="compound already exists")
-    # **で辞書をキーワード引数に展開
     db.commit()
     db.refresh(compound)
     return compound
@@ -59,8 +64,9 @@ def update_compound(compound_id: int, payload: CompoundUpdate, db: Session = Dep
     if obj is None:
         raise HTTPException(404, "compound not found")
     data = payload.model_dump(exclude_unset=True) # 送られた項目だけの辞書
+    # obj.key = val <= setattr(obj, key, val)
     for key, val in data.items():
-        setattr(obj, key, val) # obj.key = valを動的に扱う
+        setattr(obj, key, val)
     if "smiles" in data:
         props = compute_properties(data["smiles"])
         if props is None:
@@ -144,7 +150,7 @@ def update_reaction(reaction_id: int, payload: ReactionUpdate, db: Session = Dep
     db.commit()
     db.refresh(reaction)
     return reaction
-  
+
 @app.delete("/reactions/{reaction_id}", status_code=204)
 def delete_reaction(reaction_id: int, db: Session = Depends(get_db)):
     reaction = db.get(Reaction, reaction_id)
@@ -152,7 +158,7 @@ def delete_reaction(reaction_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "reaction not found")
     db.delete(reaction)
     db.commit()
-    
+
 @app.get("/reactions/{reaction_id}/equivalents", response_model=list[EquivalentRow])
 def reaction_equivalents(reaction_id: int, scale: float | None = None,
                          db: Session = Depends(get_db)):
@@ -183,9 +189,3 @@ app.add_middleware(
 # db.flush()         →   SQL送信するがCOMMITしない（SQLに直接対応する文はない）
 # db.refresh(obj)    →   SELECT ...      （内部的に再取得のSELECTが走る）
 # db.close()         →   接続を閉じる（SQLではなくドライバレベルの操作）
-
-# ターミナルで
-# uvicorn main:app --reload
-# を実行すると，main.pyを実行してappインスタンスを生成し，
-# HTTPリクエストがくるたびに対応する関数を実行する
-# --reloadはファイルが更新されると自動で再起動するオプション

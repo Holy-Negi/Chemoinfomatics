@@ -129,7 +129,7 @@ function StoichiometricTable() {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell><TableCell>Role</TableCell><TableCell>Equiv</TableCell>
+                <TableCell>Name</TableCell><TableCell>MW</TableCell><TableCell>Role</TableCell><TableCell>Equiv</TableCell>
                 <TableCell>mmol</TableCell><TableCell>Mass (g)</TableCell><TableCell>Volume (mL)</TableCell>
               </TableRow>
             </TableHead>
@@ -137,6 +137,7 @@ function StoichiometricTable() {
               {rows.map((row, i) => (
                 <TableRow key={i}>
                   <TableCell>{row.name}</TableCell>
+                  <TableCell>{fmt(row.mw, 2)}</TableCell>
                   <TableCell>{row.role}</TableCell>
                   <TableCell>{fmt(row.equiv, 2)}</TableCell>
                   <TableCell>{fmt(row.mmol, 3)}</TableCell>
