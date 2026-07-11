@@ -1,3 +1,4 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 # ELN (Electronic Lab Notebook: 電子実験ノート) Project
 
 SMILESをもとに化合物の物性をRDKitで計算し、化合物・反応情報をPostgreSQLへSQLAlchemyを通して登録する。
