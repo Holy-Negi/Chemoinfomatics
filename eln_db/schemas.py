@@ -38,6 +38,7 @@ class ReactionComponentCreate(BaseModel):
     name: str | None = None
     role: Role
     equiv: float | None = None
+    density: float | None = None
     yield_percent: float | None = None
     
 class ReactionCreate(BaseModel):

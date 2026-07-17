@@ -9,7 +9,7 @@ def get_or_create_compound(db, smiles, name=None, density=None):
     existing = db.scalar(select(Compound).where(Compound.inchikey == props["inchikey"])) # SELECT * FROM compounds WHERE inchikey = '...'
     if existing is not None:
         return existing, False
-    obj = Compound(name=name or props["smiles"], **props)
+    obj = Compound(name=name or props["smiles"], **props, density=density)
     # name == Noneのとき name = props["smiles"] を代入する
     # **props: 辞書propsをキーワード引数に展開する
     db.add(obj)

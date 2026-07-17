@@ -23,6 +23,7 @@ from schemas import CompoundCreate, CompoundRead, ReactionRead, ReactionCreate, 
 from chemistry import compute_properties
 from crud import get_or_create_compound
 from stoichiometry import compute_equivalents
+import pubchempy as pcp
 
 app = FastAPI()
 
@@ -95,7 +96,7 @@ def create_reaction(payload: ReactionCreate, db: Session = Depends(get_db)):
         scale=payload.scale, conc=payload.conc, note=payload.note,
     )
     for c in payload.components:
-        compound, _ = get_or_create_compound(db, c.smiles, c.name)
+        compound, _ = get_or_create_compound(db, c.smiles, c.name, c.density)
         if compound is None:
             raise HTTPException(422, detail=f"invalid SMILES: {c.smiles}")
         # relationship経由でSQLAlchemyが自動的にcompoundsテーブルの外部キーを埋める
@@ -167,6 +168,14 @@ def reaction_equivalents(reaction_id: int, scale: float | None = None,
         raise HTTPException(404, "reaction not found")
     s = scale if scale is not None else reaction.scale   # 未指定なら保存値を使う
     return compute_equivalents(reaction, s)
+
+@app.get("/resolve")
+def resolve_name(name: str):
+    compounds = pcp.get_compounds(name, 'name')
+    if not compounds:
+        raise HTTPException(404, "compounds not found")
+    smiles = {"name": compounds[0].iupac_name, "smiles": compounds[0].isomeric_smiles}
+    return smiles
 
 # リクエストを許可するオリジン・メソッド・ヘッダー
 app.add_middleware(

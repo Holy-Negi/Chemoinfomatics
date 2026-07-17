@@ -8,7 +8,7 @@ function ReactionForm({ onCreated }) {
   const [scale, setScale] = useState("");
   const [conc, setConc] = useState("");
   const [note, setNote] = useState("");
-  const [components, setComponents] = useState([{ smiles: "", role: "reactant", equiv: "" }]);
+  const [components, setComponents] = useState([{ name: "", smiles: "", role: "reactant", equiv: "", density: "", yield: "" }]);
 
   const handleCreate = async () => {
     try {
@@ -22,16 +22,19 @@ function ReactionForm({ onCreated }) {
           conc: Number(conc),
           note: note || null,
           components: components.map((c) => ({
+            name: c.name,
             smiles: c.smiles,
             role: c.role,
             equiv: c.equiv === "" ? null : Number(c.equiv),
+            density: c.density === "" ? null : Number(c.density),
+            yield_percent: c.yield === "" ? null : Number(c.yield)
           })),
         }),
       });
       if (!res.ok) { const err = await res.json(); throw new Error(JSON.stringify(err.detail)); }
       // フォームを初期化
       setExpCode(""); setDate(""); setScale(""); setConc(""); setNote("");
-      setComponents([{ smiles: "", role: "reactant", equiv: "" }]);
+      setComponents([{ name: "", smiles: "", role: "reactant", equiv: "", density: "", yield: "" }]);
       onCreated();
     } catch (e) { alert(e.message); }
   };

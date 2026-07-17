@@ -22,11 +22,16 @@ function CompoundEditDialog({ compound, onClose, onUpdated }) {
 
   const handleSubmit = async () => {
     try {
+      const payload = {
+        name,
+        density: density === "" ? null : Number(density)
+      };
       // バッククウォートで囲んで、${...}とすることで変数や式を文字列に埋め込む
       const res = await fetch(`http://localhost:8000/compounds/${compound.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json"},
-        body: JSON.stringify({ name, density }),
+        // {"density": 1.23}の形にする
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const err = await res.json();
