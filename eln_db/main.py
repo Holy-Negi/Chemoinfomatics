@@ -13,14 +13,14 @@
 #   def 関数名(payload: 入力の型, db: Session = Depends(get_db)):
 #       ...
 #       return オブジェクト
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Compound, Reaction, ReactionComponent
 from schemas import CompoundCreate, CompoundRead, ReactionRead, ReactionCreate, CompoundUpdate, ReactionUpdate, EquivalentRow
-from chemistry import compute_properties
+from chemistry import compute_properties, render_svg
 from crud import get_or_create_compound
 from stoichiometry import compute_equivalents
 import pubchempy as pcp
@@ -176,6 +176,13 @@ def resolve_name(name: str):
         raise HTTPException(404, "compounds not found")
     smiles = {"name": compounds[0].iupac_name, "smiles": compounds[0].isomeric_smiles}
     return smiles
+
+@app.get("/depict")
+def depict(smiles: str):
+    svg = render_svg(smiles)
+    if svg is None:
+        raise HTTPException(422, "invalid SMILES")
+    return Response(content=svg, media_type="image/svg+xml")
 
 # リクエストを許可するオリジン・メソッド・ヘッダー
 app.add_middleware(

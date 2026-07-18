@@ -68,7 +68,7 @@ function CompoundTable() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                <TableCell></TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Molecular Weight</TableCell>
                 <TableCell>LogP</TableCell>
@@ -79,7 +79,13 @@ function CompoundTable() {
             <TableBody>
               {compounds.map((c) => ( // 配列を行に変換
                 <TableRow key={c.id}>
-                  <TableCell>{c.id}</TableCell>
+                  <TableCell>{c.smiles && (
+                    <img
+                      src={`http://localhost:8000/depict?smiles=${encodeURIComponent(c.smiles)}`}
+                      alt="structure"
+                      style={{ width: 80, maxWidth: '100%', height: 'auto'}}
+                    />
+                  )}</TableCell>
                   <TableCell>{c.name}</TableCell>
                   <TableCell>{c.mw?.toFixed(2)}</TableCell>
                   <TableCell>{c.logp?.toFixed(2)}</TableCell>

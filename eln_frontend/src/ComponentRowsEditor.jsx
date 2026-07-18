@@ -39,7 +39,7 @@ function ComponentRowsEditor({ components, setComponents }) {
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
           <TextField label="name" size="small" value={row.name}
             onChange={(e) => updateRow(i, "name", e.target.value)} />
-          <Button onClick={() => handleResolve(i)}>Resolve</Button>
+          <Button onClick={() => handleResolve(i)}>Get SMILES</Button>
           <TextField label="SMILES" size="small" value={row.smiles}
             onChange={(e) => updateRow(i, "smiles", e.target.value)} />
           <Select size="small" value={row.role}
@@ -53,6 +53,13 @@ function ComponentRowsEditor({ components, setComponents }) {
           <TextField label="yield (%)" size="small" value={row.yield} style={{ width: 90 }}
             onChange={(e) => updateRow(i, "yield", e.target.value)} />
           <Button color="error" onClick={() => removeRow(i)}>×</Button>
+          {row.smiles && (
+            <img
+              src={`http://localhost:8000/depict?smiles=${encodeURIComponent(row.smiles)}`}
+              alt='structure'
+              style={{ height: 40, width: 'auto', maxWidth: '100%'}}
+            />
+          )}
         </div>
       ))}
       <Button onClick={addRow}>+ Add component</Button>

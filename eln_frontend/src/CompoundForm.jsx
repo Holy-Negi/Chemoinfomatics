@@ -8,6 +8,7 @@ function CompoundForm({ onCreated }) {
   const [name, setName] = useState("");
   const [smiles, setSmiles] = useState("");
   const [density, setDensity] = useState("");
+  const [valid, setValid] = useState(null);
 
   const handleCreate = async () => {
     try {
@@ -52,13 +53,31 @@ function CompoundForm({ onCreated }) {
   return (
     <div style={{ border: "1px solid #ccc", padding: 12, marginBottom: 16 }}>
       <h3>New compound</h3>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-        <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Button onClick={handleResolve}>Resolve</Button>
-        <TextField label="SMILES" value={smiles} onChange={(e) => setSmiles(e.target.value)} />
-        <TextField label="density" value={density} onChange={(e) => setDensity(e.target.value)} />
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+          <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <TextField label="SMILES" value={smiles} onChange={(e) => { setSmiles(e.target.value); setValid(null); }} />
+          <TextField label="density" value={density} onChange={(e) => setDensity(e.target.value)} />
+          <Button onClick={handleResolve}>GET SMILES</Button>
+          <Button variant="contained" onClick={handleCreate}>Register</Button>
+        </div>
+        <div style={{ width: 220, flexShrink: 0 }}>
+          {smiles && (
+            <img
+              src={`http://localhost:8000/depict?smiles=${encodeURIComponent(smiles)}`}
+              alt="structure"
+              onLoad={() => setValid(true)}
+              onError={() => setValid(false)}
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
+          )}
+          {valid === null
+            ? null
+            : valid
+              ? <p style={{ color: 'green' }}>✓ valid</p>
+              : <p style={{ color: 'red' }}>✗ invalid</p>}
+        </div>
       </div>
-      <Button variant="contained" onClick={handleCreate}>Register</Button>
     </div>
   )
 }
